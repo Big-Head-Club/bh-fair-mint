@@ -1,16 +1,15 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
-import { Keccak } from 'sha3'
 import { ethers } from 'ethers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const INPUT_PATH = path.join(__dirname, 'input')
 
 /**
- *
+ * ============================================================================
  * PROVENANCE HASH
- *
+ * ============================================================================
  */
 
 /**
@@ -24,14 +23,14 @@ function getProvenanceHash(directory) {
 
   files.forEach(file => {
     const fileBuffer = fs.readFileSync(path.join(directory, file))
-    const fileHash = new Keccak(256).update(fileBuffer).digest('hex')
+    const fileHash = ethers.utils.keccak256(fileBuffer).substring(2) // Omit '0x' prefix
 
     concatenatedHashes += fileHash
   })
 
-  const provenanceHash = new Keccak(256)
-    .update(concatenatedHashes)
-    .digest('hex')
+  const provenanceHash = ethers.utils.keccak256(
+    ethers.utils.toUtf8Bytes(concatenatedHashes)
+  )
 
   return provenanceHash
 }
@@ -39,12 +38,12 @@ function getProvenanceHash(directory) {
 console.log('Provenance hash:', getProvenanceHash(INPUT_PATH))
 
 /**
- *
+ * ============================================================================
  * THE SHUFFLE
- *
+ * ============================================================================
  */
 
-const initialArray = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+const INITIAL_ARRAY = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 const BLOCK_HASH =
   '0x45711a07caee26dbaf62e2b2cc2f7834eedcc19026be6a07dd48c6e36271d2fc'
 
@@ -62,11 +61,9 @@ function getRandomIndicesFromBlockHash(array, blockHash) {
     const iPlusBlockHashBigNumber = iBigNumber.add(blockHashBigNumber)
 
     // 2 - Take the keccak256 hash of the above result
-    const hash = new Keccak(256)
-      .update(iPlusBlockHashBigNumber._hex.substring(2)) // Omit the '0x' prefix
-      .digest('hex')
+    const hash = ethers.utils.keccak256(iPlusBlockHashBigNumber)
 
-    const hashBigNumber = ethers.BigNumber.from(`0x${hash}`)
+    const hashBigNumber = ethers.BigNumber.from(hash)
 
     // 3 - Return the result modulo the length of the `array`
     randomIndices.push(hashBigNumber.mod(array.length).toNumber())
@@ -75,4 +72,4 @@ function getRandomIndicesFromBlockHash(array, blockHash) {
   return randomIndices
 }
 
-console.log(getRandomIndicesFromBlockHash(initialArray, BLOCK_HASH))
+console.log(getRandomIndicesFromBlockHash(INITIAL_ARRAY, BLOCK_HASH))
