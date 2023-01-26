@@ -6,6 +6,10 @@ import { ethers } from 'ethers'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const INPUT_PATH = path.join(__dirname, 'input')
 
+const INITIAL_ARRAY = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+const BLOCK_HASH =
+  '0x45711a07caee26dbaf62e2b2cc2f7834eedcc19026be6a07dd48c6e36271d2fc'
+
 /**
  * ============================================================================
  * PROVENANCE HASH
@@ -35,17 +39,15 @@ function getProvenanceHash(directory) {
   return provenanceHash
 }
 
-console.log('Provenance hash:', getProvenanceHash(INPUT_PATH))
+console.log('Provenance hash:', getProvenanceHash(INPUT_PATH), '\n')
 
 /**
  * ============================================================================
- * THE SHUFFLE
+ * RANDOM INDICES FROM BLOCK HASH
  * ============================================================================
  */
 
-const INITIAL_ARRAY = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-const BLOCK_HASH =
-  '0x45711a07caee26dbaf62e2b2cc2f7834eedcc19026be6a07dd48c6e36271d2fc'
+console.log('Initial array:', INITIAL_ARRAY, '\n')
 
 /**
  * Returns an array of random indices within the provided `array`, using the
@@ -62,7 +64,6 @@ function getRandomIndicesFromBlockHash(array, blockHash) {
 
     // 2 - Take the keccak256 hash of the above result
     const hash = ethers.utils.keccak256(iPlusBlockHashBigNumber)
-
     const hashBigNumber = ethers.BigNumber.from(hash)
 
     // 3 - Return the result modulo the length of the `array`
@@ -72,4 +73,56 @@ function getRandomIndicesFromBlockHash(array, blockHash) {
   return randomIndices
 }
 
-console.log(getRandomIndicesFromBlockHash(INITIAL_ARRAY, BLOCK_HASH))
+const randomIndices = getRandomIndicesFromBlockHash(INITIAL_ARRAY, BLOCK_HASH)
+console.log(
+  `Random indices from block hash ${BLOCK_HASH}:`,
+  randomIndices,
+  '\n'
+)
+
+/**
+ * ============================================================================
+ * SEEDED FISHER-YATES SHUFFLE
+ * ============================================================================
+ */
+
+/**
+ * Performs a Fisher-Yates shuffle on `array` using the provided `randomIndices`.
+ */
+function shuffleArray(array, randomIndices) {
+  let currentIndex = array.length
+  let randomIndex
+
+  // Loop backwards through `array`
+  while (currentIndex != 0) {
+    currentIndex--
+    randomIndex = randomIndices[currentIndex]
+
+    // Swap item at `currentIndex` with item at `randomIndex`
+    ;[array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex]
+    ]
+  }
+
+  return array
+}
+
+const shuffledArray = shuffleArray(INITIAL_ARRAY, randomIndices)
+console.log('Shuffled array:', shuffledArray, '\n')
+
+/**
+ * Reverses Fisher-Yates shuffle on `array` using the provided `randomIndices`.
+ */
+function unshuffleArray(array, randomIndices) {
+  for (let i = 0; i < randomIndices.length; i++) {
+    ;[array[i], array[randomIndices[i]]] = [array[randomIndices[i]], array[i]]
+  }
+
+  return array
+}
+
+const unshuffledArray = unshuffleArray(shuffledArray, randomIndices)
+console.log('Unshuffled array:', unshuffledArray, '\n')
+
+console.log('Array successfully unshuffled:', unshuffledArray == INITIAL_ARRAY)
