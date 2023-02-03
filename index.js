@@ -1,14 +1,21 @@
+import * as dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
 import { ethers } from 'ethers'
 
+dotenv.config()
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const INPUT_PATH = path.join(__dirname, 'input')
 
-const INITIAL_ARRAY = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-const BLOCK_HASH =
-  '0x45711a07caee26dbaf62e2b2cc2f7834eedcc19026be6a07dd48c6e36271d2fc'
+const tokenStartNum = parseInt(process.env.TOKEN_START_NUM)
+
+const INITIAL_ARRAY = Array.from(
+  { length: process.env.NUM_TOKENS },
+  (_, i) => i + tokenStartNum
+)
+const BLOCK_HASH = process.env.BLOCK_HASH
 
 /**
  * ============================================================================
@@ -25,7 +32,7 @@ function getProvenanceHash(directory) {
   let concatenatedHashes = new String()
   const files = fs.readdirSync(directory)
 
-  files.forEach(file => {
+  files.forEach((file) => {
     const fileBuffer = fs.readFileSync(path.join(directory, file))
     const fileHash = ethers.utils.keccak256(fileBuffer).substring(2) // Omit '0x' prefix
 
@@ -57,7 +64,7 @@ function getRandomIndicesFromBlockHash(array, blockHash) {
   let randomIndices = []
   const blockHashBigNumber = ethers.BigNumber.from(blockHash)
 
-  array.forEach(i => {
+  array.forEach((i) => {
     // 1 - Add `array` item `i` to `blockHash`
     const iBigNumber = ethers.BigNumber.from(i)
     const iPlusBlockHashBigNumber = iBigNumber.add(blockHashBigNumber)
@@ -101,7 +108,7 @@ function shuffleArray(array, randomIndices) {
     // Swap item at `currentIndex` with item at `randomIndex`
     ;[array[currentIndex], array[randomIndex]] = [
       array[randomIndex],
-      array[currentIndex]
+      array[currentIndex],
     ]
   }
 
