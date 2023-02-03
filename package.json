@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "example": "node example.js",
     "format": "npx prettier --write ."
   },
   "keywords": [],
