@@ -43,7 +43,7 @@ function getProvenanceHash(directory) {
     ethers.utils.toUtf8Bytes(concatenatedHashes)
   )
 
-  return provenanceHash
+  return provenanceHash.substring(2) // Omit '0x' prefix
 }
 
 console.log('Provenance hash:', getProvenanceHash(INPUT_PATH), '\n')
