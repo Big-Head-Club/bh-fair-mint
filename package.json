@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "example": "node example.js",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "provenance-hash": "node scripts/provenance-hash.js",
+    "shuffle-metadata": "node scripts/shuffle-metadata.js",
+    "verify": "node scripts/verify.js"
   },
   "keywords": [],
   "author": "",

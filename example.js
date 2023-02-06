@@ -30,7 +30,9 @@ const BLOCK_HASH = process.env.BLOCK_HASH
  */
 function getProvenanceHash(directory) {
   let concatenatedHashes = new String()
-  const files = fs.readdirSync(directory)
+  const files = fs
+    .readdirSync(directory)
+    .filter((item) => item !== '.gitignore') // Remove '.gitignore' file
 
   files.forEach((file) => {
     const fileBuffer = fs.readFileSync(path.join(directory, file))
@@ -46,7 +48,11 @@ function getProvenanceHash(directory) {
   return provenanceHash.substring(2) // Omit '0x' prefix
 }
 
-console.log('Provenance hash:', getProvenanceHash(INPUT_PATH), '\n')
+console.log(
+  'Provenance hash:',
+  getProvenanceHash(path.join(INPUT_PATH, 'metadata-images')),
+  '\n'
+)
 
 /**
  * ============================================================================
@@ -82,7 +88,7 @@ function getRandomIndicesFromBlockHash(array, blockHash) {
 
 const randomIndices = getRandomIndicesFromBlockHash(INITIAL_ARRAY, BLOCK_HASH)
 console.log(
-  `Random indices from block hash ${BLOCK_HASH}:`,
+  `Random indices derived from block hash ${BLOCK_HASH}:`,
   randomIndices,
   '\n'
 )
