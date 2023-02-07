@@ -1,10 +1,7 @@
 import fs from 'fs'
 import path from 'path'
-import * as dotenv from 'dotenv'
 import { ethers } from 'ethers'
 import { config } from './config.js'
-
-dotenv.config()
 
 /**
  * Removes `.gitignore` from array. Used when reading the contents of e.g. the
