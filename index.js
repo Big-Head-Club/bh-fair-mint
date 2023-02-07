@@ -7,28 +7,15 @@ import { config } from './config.js'
 dotenv.config()
 
 /**
- * Returns an ordered array of token id's beginning with either 0 or 1.
+ * Removes `.gitignore` from array. Used when reading the contents of e.g. the
+ * metadata images directory.
  */
-function getOrderedTokenIds() {
-  const metadataImages = removeDotGitignore(
-    fs.readdirSync(config.paths.input.metadataImages)
-  )
-
-  return Array.from(
-    { length: metadataImages.length },
-    (_, i) => i + parseInt(config.tokenIdsBeginAt)
-  )
+function removeDotGitignore(array) {
+  return array.filter((item) => item !== '.gitignore')
 }
 
 /**
- * Returns the block hash being used to seed the shuffle's randomness.
- */
-function getBlockHash() {
-  return config.blockHash
-}
-
-/**
- * Returns the token id at `index` from the ordered array of all token id's.
+ * Returns the token id at `index` within the ordered array of all token id's.
  * This is necessary because token id's may start at 0 or 1.
  */
 function getTokenIdAtIndex(index) {
@@ -43,15 +30,28 @@ function getIndexOfTokenId(tokenId) {
 }
 
 /**
- * Removes `.gitignore` from array. Used when reading the contents of e.g. the
- * metadata images directory.
+ * Returns an ordered array of token id's beginning with `config.tokenIdsBeginAt`.
  */
-function removeDotGitignore(array) {
-  return array.filter((item) => item !== '.gitignore')
+function getOrderedTokenIds() {
+  const metadataImages = removeDotGitignore(
+    fs.readdirSync(config.paths.input.metadataImages)
+  )
+
+  return Array.from({ length: metadataImages.length }, (_, i) =>
+    getTokenIdAtIndex(i)
+  )
 }
 
 /**
- * Returns the keccak256 hash of the image with the '0x' prefix omitted.
+ * Returns the block hash being used to seed the shuffle's randomness.
+ */
+function getBlockHash() {
+  return config.blockHash
+}
+
+/**
+ * Returns the keccak256 hash of the image at `imagePath` with the '0x' prefix
+ * omitted.
  */
 function getImageHash(imagePath) {
   const fileBuffer = fs.readFileSync(imagePath)
@@ -67,14 +67,15 @@ function getImageHash(imagePath) {
  * { initialTokenId: { imageHash, newTokenId }, ... }
  */
 function getShuffleLog() {
-  const logPath = config.paths.output.shuffleLog
-  if (!fs.existsSync(logPath)) fs.writeFileSync(logPath, JSON.stringify({}))
+  const shuffleLogPath = config.paths.output.shuffleLog
+  if (!fs.existsSync(shuffleLogPath))
+    fs.writeFileSync(shuffleLogPath, JSON.stringify({}))
 
   return JSON.parse(fs.readFileSync(config.paths.output.shuffleLog))
 }
 
 /**
- * Updates the 'shuffle log' json file.
+ * Updates (overwrites) the `shuffleLog` json file.
  */
 function setShuffleLog(shuffleLog) {
   fs.writeFileSync(config.paths.output.shuffleLog, JSON.stringify(shuffleLog))
@@ -82,7 +83,7 @@ function setShuffleLog(shuffleLog) {
 
 /**
  * Returns the provenance hash for the metadata images in the input directory and
- * optionally also logs each token's image hash to the output specified in `options`.
+ * also writes each token's original id and image hash to the shuffle log.
  */
 function getProvenanceHash(directory) {
   let provenanceHash = ''
@@ -93,11 +94,9 @@ function getProvenanceHash(directory) {
     const tokenId = getTokenIdAtIndex(i)
     const imageHash = getImageHash(path.join(directory, image))
 
-    console.log(`${image}: ${imageHash}`)
-
     concatenatedHashes += imageHash
 
-    // Update shuffle log with this token's id and image hash
+    // Update the shuffle log with this token's id and image hash
     const shuffleLog = getShuffleLog()
     shuffleLog[tokenId] = { imageHash }
     setShuffleLog(shuffleLog)
@@ -140,7 +139,6 @@ function getRandomIndicesFromBlockHash(array, blockHash) {
  * Performs a Fisher-Yates shuffle on `array` using the provided `randomIndices`.
  */
 function shuffleArray(array, randomIndices) {
-  console.log('randomIndices:', randomIndices)
   let currentIndex = array.length
   let randomIndex
 
@@ -160,7 +158,7 @@ function shuffleArray(array, randomIndices) {
 }
 
 /**
- * Reverses Fisher-Yates shuffle on `array` using the provided `randomIndices`.
+ * Reverses the Fisher-Yates shuffle on `array` using the provided `randomIndices`.
  */
 function unshuffleArray(array, randomIndices) {
   for (let i = 0; i < randomIndices.length; i++) {
@@ -170,43 +168,17 @@ function unshuffleArray(array, randomIndices) {
   return array
 }
 
-/**
- * Returns an array of shuffled token id's.
- */
-function getShuffledTokenIds(orderedTokenIds, blockHash) {
-  // Derive array of random indices within `orderedTokenIds` based on `blockHash`
-  console.log(
-    `Deriving random token id array indices from block hash ${blockHash}...`
-  )
-  const randomIndices = getRandomIndicesFromBlockHash(
-    orderedTokenIds,
-    blockHash
-  )
-  console.log(
-    'Random token id array indices derived from block hash:',
-    randomIndices
-  )
-
-  // Perform a Fisher-Yates shuffle of `orderedTokenIds` using `randomIndices`
-  console.log('Shuffling token ids...')
-  const shuffledTokenIds = shuffleArray(orderedTokenIds, randomIndices)
-  console.log('Shuffled token ids:', shuffledTokenIds)
-
-  return shuffledTokenIds
-}
-
 export {
+  removeDotGitignore,
   getTokenIdAtIndex,
   getIndexOfTokenId,
-  getShuffleLog,
-  setShuffleLog,
-  getImageHash,
-  removeDotGitignore,
-  getProvenanceHash,
   getOrderedTokenIds,
   getBlockHash,
+  getImageHash,
+  getShuffleLog,
+  setShuffleLog,
+  getProvenanceHash,
   getRandomIndicesFromBlockHash,
   shuffleArray,
   unshuffleArray,
-  getShuffledTokenIds,
 }

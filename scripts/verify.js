@@ -2,35 +2,30 @@ import fs from 'fs'
 import path from 'path'
 import { ethers } from 'ethers'
 import {
-  getOrderedTokenIds,
-  getBlockHash,
+  removeDotGitignore,
   unshuffleArray,
   getRandomIndicesFromBlockHash,
+  getOrderedTokenIds,
+  getBlockHash,
   getImageHash,
-  removeDotGitignore,
-  getTokenIdAtIndex,
 } from '../index.js'
 import { config } from '../config.js'
 
 /**
  * Init - Verifies the shuffle by first unshuffling the images in the verify
- * images directory (reversing the shuffle based on the block hash), then
- * calculates a new provenance hash of the resulting order of images, and checks
- * it against the provenance hash in the input directory.
+ * images directory (reversing the shuffle based on the block hash specified in
+ * the config), then calculates a new provenance hash of the resulting ordered
+ * images, and checks it against the provenance hash in the config, logging the
+ * result to the console.
  */
 ;(function init() {
-  const provenanceHash = config.provenanceHashToVerify
-  const orderedTokenIds = getOrderedTokenIds()
-  const blockHash = getBlockHash()
   const shuffledMetadataImages = removeDotGitignore(
     fs.readdirSync(config.paths.input.verifyImages)
   )
-  console.log('shuffledMetadataImages', shuffledMetadataImages)
   const unshuffledMetadataImages = unshuffleArray(
-    shuffledMetadataImages,
-    getRandomIndicesFromBlockHash(orderedTokenIds, blockHash)
+    [...shuffledMetadataImages],
+    getRandomIndicesFromBlockHash(getOrderedTokenIds(), getBlockHash())
   )
-  console.log('unshuffledMetadataImages', unshuffledMetadataImages)
 
   // Calculate a new provenance hash based on the unshuffled metadata images
   let concatenatedHashes = ''
@@ -40,8 +35,6 @@ import { config } from '../config.js'
       path.join(config.paths.input.verifyImages, image)
     )
 
-    console.log(`${image}: ${imageHash}`)
-
     concatenatedHashes += imageHash
   })
 
@@ -49,5 +42,8 @@ import { config } from '../config.js'
     .keccak256(ethers.utils.toUtf8Bytes(concatenatedHashes))
     .substring(2) // Omit '0x' prefix
 
-  console.log('Verified:', provenanceHash == calculatedProvenanceHash)
+  console.log(
+    'Shuffle verified:',
+    calculatedProvenanceHash === config.provenanceHashToVerify
+  )
 })()

@@ -1,23 +1,22 @@
 import fs from 'fs'
-import { getProvenanceHash } from '../index.js'
 import { config } from '../config.js'
+import { getProvenanceHash } from '../index.js'
 
 /**
  * Init - Gets a provenance hash for the metadata images in the input directory,
- * logging each image's individual token id and hash to the shuffle log, and
- * writes the final provenance hash to output.
+ * logging each image's original token id and hash to the shuffle log, and
+ * then writes the final provenance hash to the output directory.
  */
 ;(function init() {
-  const metadataImagesPath = config.paths.input.metadataImages
-
-  // Get provenance hash, logging each file's hash to the shuffle log
-  console.log(`Generating a provenance hash for ${metadataImagesPath}...`)
-  const provenanceHash = getProvenanceHash(metadataImagesPath)
-
-  // Write provenance hash to output
-  const provenanceHashOutputPath = config.paths.output.provenanceHash
-  fs.writeFileSync(provenanceHashOutputPath, provenanceHash)
+  // Get provenance hash, logging each image's original token id and hash to the shuffle log
   console.log(
-    `Provenance hash ${provenanceHash} written to ${provenanceHashOutputPath}.`
+    `Generating a provenance hash for ${config.paths.input.metadataImages}...`
+  )
+  const provenanceHash = getProvenanceHash(config.paths.input.metadataImages)
+
+  // Write provenance hash to the output directory
+  fs.writeFileSync(config.paths.output.provenanceHash, provenanceHash)
+  console.log(
+    `Provenance hash ${provenanceHash} written to ${config.paths.output.provenanceHash}.`
   )
 })()
