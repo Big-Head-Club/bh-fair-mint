@@ -31,7 +31,7 @@ function getIndexOfTokenId(tokenId) {
  */
 function getOrderedTokenIds() {
   const metadataImages = removeDotGitignore(
-    fs.readdirSync(config.paths.input.metadataImages)
+    readdirSyncOrdered(config.paths.input.metadataImages)
   )
 
   return Array.from({ length: metadataImages.length }, (_, i) =>
@@ -79,17 +79,32 @@ function setShuffleLog(shuffleLog) {
 }
 
 /**
+ * A substitute for Node's readdirSync that sorts the resulting array of file
+ * names numerically (e.g. 1.png, 2.png, 3.png instead of 1.png, 10.png, 100.png).
+ */
+function readdirSyncOrdered(directory) {
+  return fs.readdirSync(directory).sort((a, b) =>
+    a.localeCompare(b, undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    })
+  )
+}
+
+/**
  * Returns the provenance hash for the metadata images in the input directory and
  * also writes each token's original id and image hash to the shuffle log.
  */
 function getProvenanceHash(directory) {
   let provenanceHash = ''
-  const metadataImages = removeDotGitignore(fs.readdirSync(directory))
+  const metadataImages = removeDotGitignore(readdirSyncOrdered(directory))
   let concatenatedHashes = new String()
 
   metadataImages.forEach((image, i) => {
     const tokenId = getTokenIdAtIndex(i)
     const imageHash = getImageHash(path.join(directory, image))
+
+    console.log(`${image}: ${imageHash}`)
 
     concatenatedHashes += imageHash
 
@@ -174,6 +189,7 @@ export {
   getImageHash,
   getShuffleLog,
   setShuffleLog,
+  readdirSyncOrdered,
   getProvenanceHash,
   getRandomIndicesFromBlockHash,
   shuffleArray,

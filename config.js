@@ -6,11 +6,11 @@ const INPUT_PATH = path.join(__dirname, 'input')
 const OUTPUT_PATH = path.join(__dirname, 'output')
 
 const config = {
-  tokenIdsBeginAt: 0,
+  tokenIdsBeginAt: 1,
   blockHash:
-    '0x49066e52661c8e9ab437964e1946d76e51eb771f73fddb1d5a046c0c3b4c9e9e',
+    '0xcee4a5932a21bbfc8470e8c8c3ec0e0a7d31d7467addf28ed74d95bbe77d5788',
   provenanceHashToVerify:
-    'db7195cb80b883fca18ca05e512ec1752073386d794d994dd4f74c3da13c66b2',
+    '335eede1a119b7d76e5eba2960f6bdfc119f374269964ce8eaf04ad0257323d5',
   paths: {
     input: {
       root: INPUT_PATH,

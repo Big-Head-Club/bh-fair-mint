@@ -1,3 +1,10 @@
 node_modules
 .env
 notes.txt
+input/metadata-images/*
+input/metadata-json/*
+input/verify-images/*
+output/metadata-images/*
+output/metadata-json/*
+output/provenance-hash.txt
+output/shuffle-log.json
